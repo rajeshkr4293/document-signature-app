@@ -15,36 +15,52 @@ app.use(cors());
 app.use(express.json());
 
 // =====================
-// ✅ Serve files directly from server folder
+// Serve files
 // =====================
 app.use("/files", express.static(__dirname));
 
 // =====================
+// Deployment Mode Check
+// =====================
+const NO_DB = process.env.NO_DB === "true";
+
+if (!NO_DB && process.env.MONGO_URI) {
+  mongoose.connect(process.env.MONGO_URI)
+    .then(() => console.log("MongoDB Connected"))
+    .catch(err => console.log("Mongo Error:", err));
+} else {
+  console.log("Running in deployment demo mode (NO_DB enabled)");
+}
+
+// =====================
 // Routes
 // =====================
-const authRoutes = require("./routes/authRoutes");
-const documentRoutes = require("./routes/documentRoutes");
-const signatureRoutes = require("./routes/signatureRoutes");
-const auditRoutes = require("./routes/auditRoutes");
-const authMiddleware = require("./middleware/authMiddleware");
+if (!NO_DB) {
+  const authRoutes = require("./routes/authRoutes");
+  const documentRoutes = require("./routes/documentRoutes");
+  const signatureRoutes = require("./routes/signatureRoutes");
+  const auditRoutes = require("./routes/auditRoutes");
+  const authMiddleware = require("./middleware/authMiddleware");
 
-app.use("/api/auth", authRoutes);
-app.use("/api/docs", documentRoutes);
-app.use("/api/signatures", signatureRoutes);
-app.use("/api/audit", auditRoutes);
+  app.use("/api/auth", authRoutes);
+  app.use("/api/docs", documentRoutes);
+  app.use("/api/signatures", signatureRoutes);
+  app.use("/api/audit", auditRoutes);
 
-// Test protected route
-app.get("/api/protected", authMiddleware, (req, res) => {
-  res.json({
-    message: "You accessed a protected route",
-    user: req.user
+  app.get("/api/protected", authMiddleware, (req, res) => {
+    res.json({
+      message: "You accessed a protected route",
+      user: req.user
+    });
   });
-});
-
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
+} else {
+  // Dummy routes for deployment
+  app.get("/api/*", (req, res) => {
+    res.json({
+      message: "Deployment demo mode active. Database disabled."
+    });
+  });
+}
 
 app.get("/", (req, res) => {
   res.send("API Running");
