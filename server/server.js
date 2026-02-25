@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 // =====================
-// Serve files
+// Serve files from server folder
 // =====================
 app.use("/files", express.static(__dirname));
 
@@ -24,6 +24,9 @@ app.use("/files", express.static(__dirname));
 // =====================
 const NO_DB = process.env.NO_DB === "true";
 
+// =====================
+// Database Connection (Only if NOT in demo mode)
+// =====================
 if (!NO_DB && process.env.MONGO_URI) {
   mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log("MongoDB Connected"))
@@ -36,6 +39,7 @@ if (!NO_DB && process.env.MONGO_URI) {
 // Routes
 // =====================
 if (!NO_DB) {
+
   const authRoutes = require("./routes/authRoutes");
   const documentRoutes = require("./routes/documentRoutes");
   const signatureRoutes = require("./routes/signatureRoutes");
@@ -47,21 +51,26 @@ if (!NO_DB) {
   app.use("/api/signatures", signatureRoutes);
   app.use("/api/audit", auditRoutes);
 
+  // Test protected route
   app.get("/api/protected", authMiddleware, (req, res) => {
     res.json({
       message: "You accessed a protected route",
       user: req.user
     });
   });
+
 } else {
-  // Dummy routes for deployment
-  app.get("/api/*", (req, res) => {
+  // Demo mode routes (No DB)
+  app.use("/api", (req, res) => {
     res.json({
       message: "Deployment demo mode active. Database disabled."
     });
   });
 }
 
+// =====================
+// Default Route
+// =====================
 app.get("/", (req, res) => {
   res.send("API Running");
 });
