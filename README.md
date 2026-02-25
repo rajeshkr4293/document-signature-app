@@ -229,3 +229,20 @@ Production-style project structuring
 
 This project showcases the ability to design and implement enterprise-grade backend logic, secure document handling, and production-style SaaS workflows using modern web technologies.
 
+---
+
+## 🖥 Running the Project Locally
+
+1. Start MongoDB locally
+2. Navigate to /server and run:
+ 
+   npm install
+ 
+   npm run dev
+3. Navigate to /client and run:
+ 
+   npm install
+ 
+   npm run dev
+4. Open http://localhost:5173
+
